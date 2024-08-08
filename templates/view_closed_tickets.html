@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Closed Tickets</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Closed Tickets</h1>
+    <table>
+        <tr>
+            <th>Action</th>
+            <th>Ticket ID</th>
+            <th>Start Date</th>
+            <th>Generation Time</th>
+            <th>Resolution Time</th>
+            <th>Generator Name</th>
+            <th>Issue Name</th>
+            <th>Client Name</th>
+            <th>Ticket Type</th>
+            <th>Issue Recognition</th>
+            <th>Priority</th>
+            <th>Assigned To</th>
+            <th>Department</th>
+            <th>Status</th>
+            <th>Completed Date</th>
+            <th>Time Taken (Days)</th>
+            <th>Pending Days</th>
+            <th>Remarks</th>
+        </tr>
+        {% for ticket in closed_tickets %}
+        <tr>
+            <td><a href="{{ url_for('edit_ticket', ticket_id=ticket.TicketID) }}">Edit</a></td>
+            <td>{{ ticket.TicketID }}</td>
+            <td>{{ ticket.StartDate }}</td>
+            <td>{{ ticket.TicketGenerationTime }}</td>
+            <td>{{ ticket.TicketResolutionTime }}</td>
+            <td>{{ ticket.GeneratorName }}</td>
+            <td>{{ ticket.IssueName }}</td>
+            <td>{{ ticket.ClientName }}</td>
+            <td>{{ ticket.TicketTypeName }}</td>
+            <td>{{ ticket.IssueRecognitionName }}</td>
+            <td>{{ ticket.PriorityName }}</td>
+            <td>{{ ticket.AssignedToName }}</td>
+            <td>{{ ticket.DepartmentName }}</td>
+            <td>{{ ticket.StatusName }}</td>
+            <td>{{ ticket.CompletedDate }}</td>
+            <td>{{ ticket.TimeTakenDays }}</td>
+            <td>{{ ticket.PendingDays }}</td>
+            <td>{{ ticket.Remarks }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="/">Back to Report</a>
+</body>
+</html>

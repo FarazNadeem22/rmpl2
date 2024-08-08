@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Report</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        .button-group {
+            margin-bottom: 20px;
+        }
+        .button-group button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ticket Report</h1>
+    <div class="button-group">
+        <button onclick="location.href='/add_ticket'">Add New Ticket</button>
+        <button onclick="location.href='/view_open_tickets'">View Open Tickets</button>
+        <button onclick="location.href='/view_closed_tickets'">View Closed Tickets</button>
+    </div>
+    <form method="GET" action="/">
+        <label for="status">Filter by Status:</label>
+        <select name="status">
+            <option value="">All</option>
+            {% for status in statuses %}
+            <option value="{{ status.StatusName }}">{{ status.StatusName }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Apply Filter</button>
+    </form>
+    <table>
+        <tr>
+            <th>Action</th>
+            <th>Ticket ID</th>
+            <th>Start Date</th>
+            <th>Generation Time</th>
+            <th>Resolution Time</th>
+            <th>Generator Name</th>
+            <th>Issue Name</th>
+            <th>Client Name</th>
+            <th>Ticket Type</th>
+            <th>Issue Recognition</th>
+            <th>Priority</th>
+            <th>Assigned To</th>
+            <th>Department</th>
+            <th>Status</th>
+            <th>Completed Date</th>
+            <th>Time Taken (Days)</th>
+            <th>Pending Days</th>
+            <th>Remarks</th>
+        </tr>
+        {% for ticket in tickets %}
+        <tr>
+            <td>
+                <a href="{{ url_for('edit_ticket', ticket_id=ticket.TicketID) }}">Edit</a> |
+                <a href="{{ url_for('void_ticket', ticket_id=ticket.TicketID) }}">Void</a>
+            </td>
+            <td>{{ ticket.TicketID }}</td>
+            <td>{{ ticket.StartDate }}</td>
+            <td>{{ ticket.TicketGenerationTime }}</td>
+            <td>{{ ticket.TicketResolutionTime }}</td>
+            <td>{{ ticket.GeneratorName }}</td>
+            <td>{{ ticket.IssueName }}</td>
+            <td>{{ ticket.ClientName }}</td>
+            <td>{{ ticket.TicketTypeName }}</td>
+            <td>{{ ticket.IssueRecognitionName }}</td>
+            <td>{{ ticket.PriorityName }}</td>
+            <td>{{ ticket.AssignedToName }}</td>
+            <td>{{ ticket.DepartmentName }}</td>
+            <td>{{ ticket.StatusName }}</td>
+            <td>{{ ticket.CompletedDate }}</td>
+            <td>{{ ticket.TimeTakenDays }}</td>
+            <td>{{ ticket.PendingDays }}</td>
+            <td>{{ ticket.Remarks }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

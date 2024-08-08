@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Ticket</title>
+    <script>
+        function updateGeneratorDetails() {
+            const generators = {{ generators | tojson }};
+            const generatorId = document.getElementById('generator_id').value;
+            const selectedGenerator = generators.find(generator => generator.GeneratorID == generatorId);
+            document.getElementById('kva').innerText = selectedGenerator.KVA;
+            document.getElementById('engine_location').innerText = selectedGenerator.EngineLocation;
+            document.getElementById('particulars').innerText = selectedGenerator.Particulars;
+        }
+    </script>
+</head>
+<body>
+    <h1>Add Ticket</h1>
+    <form action="/add_ticket" method="post">
+        <label for="start_date">Start Date:</label><br>
+        <input type="date" id="start_date" name="start_date"><br>
+        <label for="ticket_generation_time">Ticket Generation Time:</label><br>
+        <input type="time" id="ticket_generation_time" name="ticket_generation_time"><br>
+        <label for="ticket_resolution_time">Ticket Resolution Time:</label><br>
+        <input type="time" id="ticket_resolution_time" name="ticket_resolution_time"><br>
+
+        <label for="generator_id">Generator (RMG No):</label><br>
+        <select id="generator_id" name="generator_id" onchange="updateGeneratorDetails()">
+            {% for generator in generators %}
+                <option value="{{ generator.GeneratorID }}">{{ generator.RMGNo }}</option>
+            {% endfor %}
+        </select><br>
+        
+        <label>KVA:</label> <span id="kva"></span><br>
+        <label>Engine Location:</label> <span id="engine_location"></span><br>
+        <label>Particulars:</label> <span id="particulars"></span><br>
+
+        <label for="issue_id">Issue:</label><br>
+        <select id="issue_id" name="issue_id">
+            {% for issue in issues %}
+                <option value="{{ issue.IssueID }}">{{ issue.IssueName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="client_id">Client:</label><br>
+        <select id="client_id" name="client_id">
+            {% for client in clients %}
+                <option value="{{ client.ClientID }}">{{ client.ClientName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="ticket_type_id">Ticket Type:</label><br>
+        <select id="ticket_type_id" name="ticket_type_id">
+            {% for ticket_type in ticket_types %}
+                <option value="{{ ticket_type.TicketTypeID }}">{{ ticket_type.TicketTypeName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="issue_recognition_id">Issue Recognition:</label><br>
+        <select id="issue_recognition_id" name="issue_recognition_id">
+            {% for issue_recognition in issue_recognitions %}
+                <option value="{{ issue_recognition.IssueRecognitionID }}">{{ issue_recognition.IssueRecognitionName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="priority_id">Priority:</label><br>
+        <select id="priority_id" name="priority_id">
+            {% for priority in priorities %}
+                <option value="{{ priority.PriorityID }}">{{ priority.PriorityName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="assigned_to">Assigned To:</label><br>
+        <select id="assigned_to" name="assigned_to">
+            {% for person in people %}
+                <option value="{{ person.PersonID }}">{{ person.PersonName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="department_id">Department:</label><br>
+        <select id="department_id" name="department_id">
+            {% for department in departments %}
+                <option value="{{ department.DepartmentID }}">{{ department.DepartmentName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="status_id">Status:</label><br>
+        <select id="status_id" name="status_id">
+            {% for status in statuses %}
+                <option value="{{ status.StatusID }}">{{ status.StatusName }}</option>
+            {% endfor %}
+        </select><br>
+
+        <label for="completed_date">Completed Date:</label><br>
+        <input type="date" id="completed_date" name="completed_date"><br>
+
+        <label for="remarks">Remarks:</label><br>
+        <textarea id="remarks" name="remarks"></textarea><br>
+
+        <input type="submit" value="Add Ticket">
+    </form>
+    <a href="/">Back to Report</a>
+</body>
+</html>

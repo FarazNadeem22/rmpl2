@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Ticket</title>
+</head>
+<body>
+    <h1>Add Ticket</h1>
+    <form action="/add_ticket" method="post">
+        <label for="start_date">Start Date:</label><br>
+        <input type="date" id="start_date" name="start_date"><br>
+        <label for="ticket_generation_time">Ticket Generation Time:</label><br>
+        <input type="time" id="ticket_generation_time" name="ticket_generation_time"><br>
+        <label for="ticket_resolution_time">Ticket Resolution Time:</label><br>
+        <input type="time" id="ticket_resolution_time" name="ticket_resolution_time"><br>
+        <label for="generator_id">Generator ID:</label><br>
+        <input type="number" id="generator_id" name="generator_id"><br>
+        <label for="issue_id">Issue ID:</label><br>
+        <input type="number" id="issue_id" name="issue_id"><br>
+        <label for="client_id">Client ID:</label><br>
+        <input type="number" id="client_id" name="client_id"><br>
+        <label for="ticket_type_id">Ticket Type ID:</label><br>
+        <input type="number" id="ticket_type_id" name="ticket_type_id"><br>
+        <label for="issue_recognition_id">Issue Recognition ID:</label><br>
+        <input type="number" id="issue_recognition_id" name="issue_recognition_id"><br>
+        <label for="priority_id">Priority ID:</label><br>
+        <input type="number" id="priority_id" name="priority_id"><br>
+        <label for="assigned_to">Assigned To:</label><br>
+        <input type="number" id="assigned_to" name="assigned_to"><br>
+        <label for="department_id">Department ID:</label><br>
+        <input type="number" id="department_id" name="department_id"><br>
+        <label for="status_id">Status ID:</label><br>
+        <input type="number" id="status_id" name="status_id"><br>
+        <label for="completed_date">Completed Date:</label><br>
+        <input type="date" id="completed_date" name="completed_date"><br>
+        <label for="time_taken_days">Time Taken (Days):</label><br>
+        <input type="number" id="time_taken_days" name="time_taken_days"><br>
+        <label for="pending_days">Pending Days:</label><br>
+        <input type="number" id="pending_days" name="pending_days"><br>
+        <label for="remarks">Remarks:</label><br>
+        <textarea id="remarks" name="remarks"></textarea><br>
+        <input type="submit" value="Add Ticket">
+    </form>
+    <a href="/">Back to Report</a>
+</body>
+</html>
