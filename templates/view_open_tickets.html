@@ -20,12 +20,26 @@
         }
         form {
             margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
         .button-group {
             margin-bottom: 20px;
         }
         .button-group button {
             margin-right: 10px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group select, .form-group input {
+            padding: 5px;
         }
     </style>
 </head>
@@ -37,21 +51,55 @@
         <button onclick="location.href='/view_closed_tickets'">View Closed Tickets</button>
     </div>
     <form method="GET" action="/view_open_tickets">
-        <label for="priority">Filter by Priority:</label>
-        <select name="priority">
-            <option value="">All</option>
-            {% for priority in priorities %}
-            <option value="{{ priority.PriorityName }}">{{ priority.PriorityName }}</option>
-            {% endfor %}
-        </select>
-        <label for="assigned_to">Filter by Assigned To:</label>
-        <select name="assigned_to">
-            <option value="">All</option>
-            {% for person in people %}
-            <option value="{{ person.PersonName }}">{{ person.PersonName }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit">Apply Filters</button>
+        <div class="form-group">
+            <label for="ticket_number">Filter by Ticket Number:</label>
+            <input type="text" id="ticket_number" name="ticket_number" placeholder="Enter Ticket Number">
+        </div>
+        <div class="form-group">
+            <label for="rmg_number">Filter by RMG Number:</label>
+            <input type="text" id="rmg_number" name="rmg_number" placeholder="Enter RMG Number">
+        </div>
+        <div class="form-group">
+            <label for="issue_name">Filter by Issue Name:</label>
+            <input type="text" id="issue_name" name="issue_name" placeholder="Enter Issue Name">
+        </div>
+        <div class="form-group">
+            <label for="client_name">Filter by Client Name:</label>
+            <select name="client_name" id="client_name">
+                <option value="">All</option>
+                {% for client in clients %}
+                <option value="{{ client.ClientName }}">{{ client.ClientName }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ticket_type">Filter by Ticket Type:</label>
+            <select name="ticket_type" id="ticket_type">
+                <option value="">All</option>
+                {% for type in ticket_types %}
+                <option value="{{ type.TicketTypeName }}">{{ type.TicketTypeName }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="priority">Filter by Priority:</label>
+            <select name="priority" id="priority">
+                <option value="">All</option>
+                {% for priority in priorities %}
+                <option value="{{ priority.PriorityName }}">{{ priority.PriorityName }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="assigned_to">Filter by Assigned To:</label>
+            <select name="assigned_to" id="assigned_to">
+                <option value="">All</option>
+                {% for person in people %}
+                <option value="{{ person.PersonName }}">{{ person.PersonName }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" style="grid-column: span 3;">Apply Filters</button>
     </form>
     <table>
         <tr>

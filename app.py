@@ -47,6 +47,12 @@ def index():
 
 @app.route('/view_open_tickets', methods=['GET'])
 def view_open_tickets():
+    # Get filter values from the request
+    ticket_number = request.args.get('ticket_number')
+    rmg_number = request.args.get('rmg_number')
+    issue_name = request.args.get('issue_name')
+    client_name = request.args.get('client_name')
+    ticket_type = request.args.get('ticket_type')
     priority_filter = request.args.get('priority')
     assigned_to_filter = request.args.get('assigned_to')
     
@@ -64,24 +70,46 @@ def view_open_tickets():
         # Filter open tickets
         open_tickets = [ticket for ticket in tickets if ticket.get('StatusName') == 'Open']
         
-        # Apply the priority filter
+        # Apply filters
+        if ticket_number:
+            open_tickets = [ticket for ticket in open_tickets if str(ticket.get('TicketID')) == ticket_number]
+        
+        if rmg_number:
+            open_tickets = [ticket for ticket in open_tickets if rmg_number.lower() in ticket.get('RMGNo', '').lower()]
+        
+        if issue_name:
+            open_tickets = [ticket for ticket in open_tickets if issue_name.lower() in ticket.get('IssueName', '').lower()]
+        
+        if client_name:
+            open_tickets = [ticket for ticket in open_tickets if client_name.lower() in ticket.get('ClientName', '').lower()]
+        
+        if ticket_type:
+            open_tickets = [ticket for ticket in open_tickets if ticket.get('TicketTypeName') == ticket_type]
+        
         if priority_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('PriorityName') == priority_filter]
 
-        # Apply the assigned to filter
         if assigned_to_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('AssignedToName') == assigned_to_filter]
 
-        # Fetch priorities and people for the dropdowns
+        # Fetch priorities, ticket types, people, and clients for the dropdowns
         cursor.execute("SELECT PriorityName FROM Priorities")
         priorities = cursor.fetchall()
+        
+        cursor.execute("SELECT TicketTypeName FROM TicketTypes")
+        ticket_types = cursor.fetchall()
 
         cursor.execute("SELECT PersonName FROM People")
         people = cursor.fetchall()
 
+        # Fetch client names for the dropdown
+        cursor.execute("SELECT ClientName FROM Clients")
+        clients = cursor.fetchall()
+
         cursor.close()
         conn.close()
-        return render_template('view_open_tickets.html', open_tickets=open_tickets, priorities=priorities, people=people)
+        
+        return render_template('view_open_tickets.html', open_tickets=open_tickets, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients)
     except Error as e:
         return f"Error: {e}"
 
