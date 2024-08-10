@@ -44,7 +44,14 @@
             <option value="{{ priority.PriorityName }}">{{ priority.PriorityName }}</option>
             {% endfor %}
         </select>
-        <button type="submit">Apply Filter</button>
+        <label for="assigned_to">Filter by Assigned To:</label>
+        <select name="assigned_to">
+            <option value="">All</option>
+            {% for person in people %}
+            <option value="{{ person.PersonName }}">{{ person.PersonName }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Apply Filters</button>
     </form>
     <table>
         <tr>

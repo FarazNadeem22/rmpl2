@@ -48,6 +48,7 @@ def index():
 @app.route('/view_open_tickets', methods=['GET'])
 def view_open_tickets():
     priority_filter = request.args.get('priority')
+    assigned_to_filter = request.args.get('assigned_to')
     
     try:
         conn = get_db_connection()
@@ -67,13 +68,20 @@ def view_open_tickets():
         if priority_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('PriorityName') == priority_filter]
 
-        # Fetch priorities for the dropdown
+        # Apply the assigned to filter
+        if assigned_to_filter:
+            open_tickets = [ticket for ticket in open_tickets if ticket.get('AssignedToName') == assigned_to_filter]
+
+        # Fetch priorities and people for the dropdowns
         cursor.execute("SELECT PriorityName FROM Priorities")
         priorities = cursor.fetchall()
 
+        cursor.execute("SELECT PersonName FROM People")
+        people = cursor.fetchall()
+
         cursor.close()
         conn.close()
-        return render_template('view_open_tickets.html', open_tickets=open_tickets, priorities=priorities)
+        return render_template('view_open_tickets.html', open_tickets=open_tickets, priorities=priorities, people=people)
     except Error as e:
         return f"Error: {e}"
 
@@ -246,10 +254,6 @@ def void_ticket(ticket_id):
     except Error as e:
         return f"Error: {e}"
 
-"""
-if __name__ == '__main__':
-    app.run(debug=True)
-"""
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
