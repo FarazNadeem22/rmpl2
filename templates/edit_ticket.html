@@ -20,6 +20,8 @@
 <body>
     <h1>Edit Ticket</h1>
     <form action="/edit_ticket/{{ ticket.TicketID }}" method="post">
+        
+        <!-- Status Field -->
         <label for="status_id">Status:</label>
         <select id="status_id" name="status_id">
             {% for status in statuses %}
@@ -27,8 +29,25 @@
             {% endfor %}
         </select>
         
+        <!-- Completed Date Field -->
         <label for="completed_date">Completed Date:</label>
         <input type="date" id="completed_date" name="completed_date" value="{{ ticket.CompletedDate }}">
+
+        <!-- Priority Field -->
+        <label for="priority_id">Priority:</label>
+        <select id="priority_id" name="priority_id">
+            {% for priority in priorities %}
+                <option value="{{ priority.PriorityID }}" {% if priority.PriorityID == ticket.PriorityID %}selected{% endif %}>{{ priority.PriorityName }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Assigned To Field -->
+        <label for="assigned_to">Assigned To:</label>
+        <select id="assigned_to" name="assigned_to">
+            {% for person in people %}
+                <option value="{{ person.PersonID }}" {% if person.PersonID == ticket.AssignedTo %}selected{% endif %}>{{ person.PersonName }}</option>
+            {% endfor %}
+        </select>
         
         <input type="submit" value="Update Ticket">
     </form>

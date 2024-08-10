@@ -199,6 +199,8 @@ def edit_ticket(ticket_id):
     if request.method == 'POST':
         status_id = request.form['status_id']
         completed_date = request.form['completed_date'] if request.form['completed_date'] else None
+        priority_id = request.form['priority_id']
+        assigned_to = request.form['assigned_to']
         
         try:
             conn = get_db_connection()
@@ -206,10 +208,10 @@ def edit_ticket(ticket_id):
             cursor.execute(
                 """
                 UPDATE Tickets
-                SET StatusID = %s, CompletedDate = %s
+                SET StatusID = %s, CompletedDate = %s, PriorityID = %s, AssignedTo = %s
                 WHERE TicketID = %s
                 """,
-                (status_id, completed_date, ticket_id)
+                (status_id, completed_date, priority_id, assigned_to, ticket_id)
             )
             conn.commit()
             cursor.close()
@@ -226,11 +228,17 @@ def edit_ticket(ticket_id):
 
         cursor.execute("SELECT StatusID, StatusName FROM Statuses")
         statuses = cursor.fetchall()
+
+        cursor.execute("SELECT PriorityID, PriorityName FROM Priorities")
+        priorities = cursor.fetchall()
+
+        cursor.execute("SELECT PersonID, PersonName FROM People")
+        people = cursor.fetchall()
         
         cursor.close()
         conn.close()
 
-        return render_template('edit_ticket.html', ticket=ticket, statuses=statuses)
+        return render_template('edit_ticket.html', ticket=ticket, statuses=statuses, priorities=priorities, people=people)
     except Error as e:
         return f"Error: {e}"
 
@@ -253,7 +261,6 @@ def void_ticket(ticket_id):
         return redirect(url_for('index'))
     except Error as e:
         return f"Error: {e}"
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
