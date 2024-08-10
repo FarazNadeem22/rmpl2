@@ -92,7 +92,14 @@ def view_open_tickets():
         if assigned_to_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('AssignedToName') == assigned_to_filter]
 
-        # Fetch priorities, ticket types, people, and clients for the dropdowns
+        # Fetch ticket numbers for open tickets only
+        cursor.execute("SELECT TicketID FROM Tickets WHERE StatusID = (SELECT StatusID FROM Statuses WHERE StatusName = 'Open')")
+        ticket_numbers = cursor.fetchall()
+        
+        # Fetch RMG numbers, priorities, ticket types, people, and clients for the dropdowns
+        cursor.execute("SELECT DISTINCT RMGNo FROM Generators")
+        rmg_numbers = cursor.fetchall()
+        
         cursor.execute("SELECT PriorityName FROM Priorities")
         priorities = cursor.fetchall()
         
@@ -102,16 +109,17 @@ def view_open_tickets():
         cursor.execute("SELECT PersonName FROM People")
         people = cursor.fetchall()
 
-        # Fetch client names for the dropdown
         cursor.execute("SELECT ClientName FROM Clients")
         clients = cursor.fetchall()
 
         cursor.close()
         conn.close()
         
-        return render_template('view_open_tickets.html', open_tickets=open_tickets, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients)
+        return render_template('view_open_tickets.html', open_tickets=open_tickets, ticket_numbers=ticket_numbers, rmg_numbers=rmg_numbers, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients)
     except Error as e:
         return f"Error: {e}"
+
+
 
 @app.route('/view_closed_tickets')
 def view_closed_tickets():

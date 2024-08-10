@@ -53,11 +53,21 @@
     <form method="GET" action="/view_open_tickets">
         <div class="form-group">
             <label for="ticket_number">Filter by Ticket Number:</label>
-            <input type="text" id="ticket_number" name="ticket_number" placeholder="Enter Ticket Number">
+            <select name="ticket_number" id="ticket_number">
+                <option value="">All</option>
+                {% for ticket in ticket_numbers %}
+                <option value="{{ ticket.TicketID }}">{{ ticket.TicketID }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group">
             <label for="rmg_number">Filter by RMG Number:</label>
-            <input type="text" id="rmg_number" name="rmg_number" placeholder="Enter RMG Number">
+            <select name="rmg_number" id="rmg_number">
+                <option value="">All</option>
+                {% for rmg in rmg_numbers %}
+                <option value="{{ rmg.RMGNo }}">{{ rmg.RMGNo }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group">
             <label for="issue_name">Filter by Issue Name:</label>
