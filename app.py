@@ -18,7 +18,7 @@ def get_db_connection():
 
 @app.route('/')
 def index():
-    status_filter = request.args.get('status')
+    return render_template('index.html')
     
     try:
         conn = get_db_connection()
@@ -75,7 +75,7 @@ def view_open_tickets():
             open_tickets = [ticket for ticket in open_tickets if str(ticket.get('TicketID')) == ticket_number]
         
         if rmg_number:
-            open_tickets = [ticket for ticket in open_tickets if rmg_number.lower() in ticket.get('RMGNo', '').lower()]
+            open_tickets = [ticket for ticket in open_tickets if rmg_number.lower() == ticket.get('RMGNo', '').lower()]
         
         if issue_name:
             open_tickets = [ticket for ticket in open_tickets if issue_name.lower() in ticket.get('IssueName', '').lower()]
@@ -118,6 +118,7 @@ def view_open_tickets():
         return render_template('view_open_tickets.html', open_tickets=open_tickets, ticket_numbers=ticket_numbers, rmg_numbers=rmg_numbers, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients)
     except Error as e:
         return f"Error: {e}"
+
 
 
 

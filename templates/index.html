@@ -41,7 +41,7 @@
     </style>
 </head>
 <body>
-    <img src="/templates/logo.jpg" alt="Logo">
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
     <div class="button-group">
         <button onclick="location.href='/edit_ticket'">Edit Ticket</button>
         <button onclick="location.href='/view_closed_tickets'">View Closed Tickets</button>
