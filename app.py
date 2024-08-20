@@ -191,13 +191,13 @@ def add_ticket():
         cursor.execute("SELECT GeneratorID, RMGNo, KVA, EngineLocation, Particulars FROM Generators")
         generators = cursor.fetchall()
         
-        cursor.execute("SELECT IssueID, IssueName FROM Issues")
+        cursor.execute("SELECT IssueID, IssueName FROM Issues ORDER BY IssueName  ASC")
         issues = cursor.fetchall()
         
-        cursor.execute("SELECT ClientID, ClientName FROM Clients")
+        cursor.execute("SELECT ClientID, ClientName FROM Clients ORDER BY ClientName ASC")
         clients = cursor.fetchall()
         
-        cursor.execute("SELECT TicketTypeID, TicketTypeName FROM TicketTypes")
+        cursor.execute("SELECT TicketTypeID, TicketTypeName FROM TicketTypes ORDER BY TicketTypeName ASC")
         ticket_types = cursor.fetchall()
         
         cursor.execute("SELECT IssueRecognitionID, IssueRecognitionName FROM IssueRecognitions")
