@@ -87,9 +87,10 @@
         <label for="status_id">Status:</label><br>
         <select id="status_id" name="status_id">
             {% for status in statuses %}
-                <option value="{{ status.StatusID }}" {% if status.StatusName == 'Not Done' %}selected{% endif %}>{{ status.StatusName }}</option>
+        <option value="{{ status.StatusID }}" {% if status.StatusName == 'Open' %}selected{% endif %}>{{ status.StatusName }}</option>
             {% endfor %}
         </select><br>
+
 
         <label for="completed_date">Completed Date:</label><br>
         <input type="date" id="completed_date" name="completed_date"><br>
