@@ -278,8 +278,17 @@ def view_summary(ticket_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Fetch ticket details
-        cursor.execute("SELECT * FROM Tickets WHERE TicketID = %s", (ticket_id,))
+        # Fetch ticket details with necessary joins to populate the fields
+        cursor.execute("""
+            SELECT t.TicketID, t.StartDate, g.RMGNo AS GeneratorName, i.IssueName, c.ClientName, tt.TicketTypeName, s.StatusName
+            FROM Tickets t
+            LEFT JOIN Generators g ON t.GeneratorID = g.GeneratorID
+            LEFT JOIN Issues i ON t.IssueID = i.IssueID
+            LEFT JOIN Clients c ON t.ClientID = c.ClientID
+            LEFT JOIN TicketTypes tt ON t.TicketTypeID = tt.TicketTypeID
+            LEFT JOIN Statuses s ON t.StatusID = s.StatusID
+            WHERE t.TicketID = %s
+        """, (ticket_id,))
         ticket = cursor.fetchone()
 
         # Fetch all summaries for this ticket
@@ -294,6 +303,8 @@ def view_summary(ticket_id):
         return render_template('view_summary.html', ticket=ticket, summaries=summaries, current_time=current_time)
     except Error as e:
         return f"Error: {e}"
+
+
 
 @app.route('/add_summary_update/<int:ticket_id>', methods=['POST'])
 def add_summary_update(ticket_id):
@@ -316,6 +327,49 @@ def add_summary_update(ticket_id):
         return redirect(url_for('view_summary', ticket_id=ticket_id))
     except Error as e:
         return f"Error: {e}"
+    
+@app.route('/view_void_tickets')
+def view_void_tickets():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute("SELECT * FROM Tickets WHERE StatusID = (SELECT StatusID FROM Statuses WHERE StatusName = 'Void')")
+        void_tickets = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        return render_template('view_void_tickets.html', void_tickets=void_tickets)
+    except Error as e:
+        return f"Error: {e}"
+
+@app.route('/change_ticket_status/<int:ticket_id>', methods=['POST'])
+def change_ticket_status(ticket_id):
+    new_status = request.form['status_id']
+
+    # Determine the corresponding StatusID for the chosen status
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT StatusID FROM Statuses WHERE StatusName = %s", (new_status,))
+        status_id = cursor.fetchone()['StatusID']
+
+        cursor.execute(
+            """
+            UPDATE Tickets
+            SET StatusID = %s
+            WHERE TicketID = %s
+            """,
+            (status_id, ticket_id)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect(url_for('view_void_tickets'))
+    except Error as e:
+        return f"Error: {e}"
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
