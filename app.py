@@ -21,6 +21,7 @@ def get_db_connection():
 def index():
     return render_template('index.html')
 
+
 @app.route('/view_open_tickets', methods=['GET'])
 def view_open_tickets():
     # Get filter values from the request
@@ -31,89 +32,88 @@ def view_open_tickets():
     ticket_type = request.args.get('ticket_type')
     priority_filter = request.args.get('priority')
     assigned_to_filter = request.args.get('assigned_to')
-
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+        
+        cursor.callproc('generate_ticket_report')
+        
+        # Fetch the result of the stored procedure
+        tickets = []
+        for result in cursor.stored_results():
+            tickets.extend(result.fetchall())
 
-        # Updated SQL query with LEFT JOINs to ensure all data is fetched, even if some fields are NULL
-        cursor.execute("""
-            SELECT t.*, 
-                   g.RMGNo AS GeneratorName, 
-                   i.IssueName, 
-                   c.ClientName, 
-                   tt.TicketTypeName, 
-                   p.PriorityName, 
-                   pe.PersonName AS AssignedToName, 
-                   d.DepartmentName, 
-                   s.StatusName,
-                   ir.IssueRecognitionName
-            FROM Tickets t
-            LEFT JOIN Generators g ON t.GeneratorID = g.GeneratorID
-            LEFT JOIN Issues i ON t.IssueID = i.IssueID
-            LEFT JOIN Clients c ON t.ClientID = c.ClientID
-            LEFT JOIN TicketTypes tt ON t.TicketTypeID = tt.TicketTypeID
-            LEFT JOIN Priorities p ON t.PriorityID = p.PriorityID
-            LEFT JOIN People pe ON t.AssignedTo = pe.PersonID
-            LEFT JOIN Departments d ON pe.DepartmentID = d.DepartmentID
-            LEFT JOIN Statuses s ON t.StatusID = s.StatusID
-            LEFT JOIN IssueRecognitions ir ON t.IssueRecognitionID = ir.IssueRecognitionID
-            WHERE s.StatusName = 'Open'
-        """)
-
-        open_tickets = cursor.fetchall()
-
-        # Apply filters (same as before)
+        # Filter open tickets
+        open_tickets = [ticket for ticket in tickets if ticket.get('StatusName') == 'Open']
+        
+        # Apply filters
         if ticket_number:
             open_tickets = [ticket for ticket in open_tickets if str(ticket.get('TicketID')) == ticket_number]
-
+        
         if rmg_number:
-            open_tickets = [ticket for ticket in open_tickets if rmg_number.lower() == ticket.get('GeneratorName', '').lower()]
-
+            open_tickets = [ticket for ticket in open_tickets if rmg_number.lower() in (ticket.get('RMGNo') or '').lower()]
+        
         if issue_name:
             open_tickets = [ticket for ticket in open_tickets if issue_name.lower() in ticket.get('IssueName', '').lower()]
-
+        
         if client_name:
             open_tickets = [ticket for ticket in open_tickets if client_name.lower() in ticket.get('ClientName', '').lower()]
-
+        
         if ticket_type:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('TicketTypeName') == ticket_type]
-
+        
         if priority_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('PriorityName') == priority_filter]
 
         if assigned_to_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('AssignedToName') == assigned_to_filter]
 
-        # Fetch dropdown data for filters (same as before)
+        # Fetch ticket numbers for open tickets only
         cursor.execute("SELECT TicketID FROM Tickets WHERE StatusID = (SELECT StatusID FROM Statuses WHERE StatusName = 'Open')")
         ticket_numbers = cursor.fetchall()
-
-        cursor.execute("SELECT DISTINCT RMGNo FROM Generators")
+        
+        # Fetch RMG numbers, priorities, ticket types, people, clients, and issues for the dropdowns (alphabetically)
+        cursor.execute("SELECT DISTINCT RMGNo FROM Generators ORDER BY RMGNo ASC")
         rmg_numbers = cursor.fetchall()
-
-        cursor.execute("SELECT PriorityName FROM Priorities")
+        
+        cursor.execute("SELECT PriorityName FROM Priorities ORDER BY PriorityName ASC")
         priorities = cursor.fetchall()
-
-        cursor.execute("SELECT TicketTypeName FROM TicketTypes")
+        
+        cursor.execute("SELECT TicketTypeName FROM TicketTypes ORDER BY TicketTypeName ASC")
         ticket_types = cursor.fetchall()
 
-        cursor.execute("SELECT PersonName FROM People")
+        cursor.execute("SELECT PersonName FROM People ORDER BY PersonName ASC")
         people = cursor.fetchall()
 
-        cursor.execute("SELECT ClientName FROM Clients")
+        cursor.execute("SELECT ClientName FROM Clients ORDER BY ClientName ASC")
         clients = cursor.fetchall()
+
+        cursor.execute("SELECT IssueName FROM Issues ORDER BY IssueName ASC")
+        issues = cursor.fetchall()
 
         cursor.close()
         conn.close()
-
-        return render_template('view_open_tickets.html', open_tickets=open_tickets, ticket_numbers=ticket_numbers, rmg_numbers=rmg_numbers, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients)
+        
+        return render_template('view_open_tickets.html', open_tickets=open_tickets, ticket_numbers=ticket_numbers, rmg_numbers=rmg_numbers, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients, issues=issues)
     except Error as e:
         return f"Error: {e}"
 
 
-@app.route('/view_closed_tickets')
+
+
+
+@app.route('/view_closed_tickets', methods=['GET'])
 def view_closed_tickets():
+    # Get filter values from the request
+    ticket_number = request.args.get('ticket_number')
+    rmg_number = request.args.get('rmg_number')
+    issue_name = request.args.get('issue_name')
+    client_name = request.args.get('client_name')
+    ticket_type = request.args.get('ticket_type')
+    priority_filter = request.args.get('priority')
+    assigned_to_filter = request.args.get('assigned_to')
+    
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -127,12 +127,58 @@ def view_closed_tickets():
 
         # Filter closed tickets
         closed_tickets = [ticket for ticket in tickets if ticket.get('StatusName') == 'Closed']
+        
+        # Apply filters
+        if ticket_number:
+            closed_tickets = [ticket for ticket in closed_tickets if str(ticket.get('TicketID')) == ticket_number]
+        
+        if rmg_number:
+            closed_tickets = [ticket for ticket in closed_tickets if rmg_number.lower() == ticket.get('RMGNo', '').lower()]
+        
+        if issue_name:
+            closed_tickets = [ticket for ticket in closed_tickets if issue_name.lower() in ticket.get('IssueName', '').lower()]
+        
+        if client_name:
+            closed_tickets = [ticket for ticket in closed_tickets if client_name.lower() in ticket.get('ClientName', '').lower()]
+        
+        if ticket_type:
+            closed_tickets = [ticket for ticket in closed_tickets if ticket.get('TicketTypeName') == ticket_type]
+        
+        if priority_filter:
+            closed_tickets = [ticket for ticket in closed_tickets if ticket.get('PriorityName') == priority_filter]
+
+        if assigned_to_filter:
+            closed_tickets = [ticket for ticket in closed_tickets if ticket.get('AssignedToName') == assigned_to_filter]
+
+        # Fetch dropdown options for filtering
+        cursor.execute("SELECT TicketID FROM Tickets WHERE StatusID = (SELECT StatusID FROM Statuses WHERE StatusName = 'Closed')")
+        ticket_numbers = cursor.fetchall()
+        
+        cursor.execute("SELECT DISTINCT RMGNo FROM Generators ORDER BY RMGNo ASC")
+        rmg_numbers = cursor.fetchall()
+        
+        cursor.execute("SELECT PriorityName FROM Priorities ORDER BY PriorityName ASC")
+        priorities = cursor.fetchall()
+        
+        cursor.execute("SELECT TicketTypeName FROM TicketTypes ORDER BY TicketTypeName ASC")
+        ticket_types = cursor.fetchall()
+
+        cursor.execute("SELECT PersonName FROM People ORDER BY PersonName ASC")
+        people = cursor.fetchall()
+
+        cursor.execute("SELECT ClientName FROM Clients ORDER BY ClientName ASC")
+        clients = cursor.fetchall()
 
         cursor.close()
         conn.close()
-        return render_template('view_closed_tickets.html', closed_tickets=closed_tickets)
+        
+        return render_template('view_closed_tickets.html', closed_tickets=closed_tickets, ticket_numbers=ticket_numbers, rmg_numbers=rmg_numbers, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients)
     except Error as e:
         return f"Error: {e}"
+
+
+
+
 
 @app.route('/add_ticket', methods=['GET', 'POST'])
 def add_ticket():

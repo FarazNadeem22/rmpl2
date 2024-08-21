@@ -71,12 +71,7 @@
         </div>
         <div class="form-group">
             <label for="issue_name">Filter by Issue Name:</label>
-            <select name="issue_name" id="issue_name">
-                <option value="">All</option>
-                {% for issue in issues %}
-                <option value="{{ issue.IssueName }}">{{ issue.IssueName }}</option>
-                {% endfor %}
-            </select>
+            <input type="text" id="issue_name" name="issue_name" placeholder="Enter Issue Name">
         </div>
         <div class="form-group">
             <label for="client_name">Filter by Client Name:</label>
@@ -144,6 +139,7 @@
                 <a href="{{ url_for('void_ticket', ticket_id=ticket.TicketID) }}">Void</a> |
                 <a href="{{ url_for('view_summary', ticket_id=ticket.TicketID) }}">Summary</a>
             </td>
+            
             <td>{{ ticket.TicketID }}</td>
             <td>{{ ticket.StartDate }}</td>
             <td>{{ ticket.TicketGenerationTime }}</td>
