@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Ticket</title>
+    <style>
+        form {
+            width: 300px;
+            margin: 0 auto;
+        }
+        label, input, select {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        // JavaScript to automatically select the department when a person is selected
+        function updateDepartment() {
+            const personToDepartment = {
+                {% for person in people %}
+                "{{ person.PersonID }}": "{{ person.DepartmentID }}",
+                {% endfor %}
+            };
+
+            const departmentSelect = document.getElementById("department_id");
+            const selectedPerson = document.getElementById("assigned_to").value;
+            const selectedDepartment = personToDepartment[selectedPerson];
+
+            // Update the department select field
+            for (let i = 0; i < departmentSelect.options.length; i++) {
+                if (departmentSelect.options[i].value == selectedDepartment) {
+                    departmentSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Add Ticket</h1>
+    <form action="/add_ticket" method="post">
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date">
+
+        <label for="ticket_generation_time">Ticket Generation Time:</label>
+        <input type="time" id="ticket_generation_time" name="ticket_generation_time">
+
+        <label for="ticket_resolution_time">Ticket Resolution Time:</label>
+        <input type="time" id="ticket_resolution_time" name="ticket_resolution_time">
+
+        <label for="generator_id">Generator:</label>
+        <select id="generator_id" name="generator_id">
+            {% for generator in generators %}
+            <option value="{{ generator.GeneratorID }}">{{ generator.RMGNo }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="issue_id">Issue:</label>
+        <select id="issue_id" name="issue_id">
+            {% for issue in issues %}
+            <option value="{{ issue.IssueID }}">{{ issue.IssueName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="client_id">Client:</label>
+        <select id="client_id" name="client_id">
+            {% for client in clients %}
+            <option value="{{ client.ClientID }}">{{ client.ClientName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="ticket_type_id">Ticket Type:</label>
+        <select id="ticket_type_id" name="ticket_type_id">
+            {% for ticket_type in ticket_types %}
+            <option value="{{ ticket_type.TicketTypeID }}">{{ ticket_type.TicketTypeName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="issue_recognition_id">Issue Recognition:</label>
+        <select id="issue_recognition_id" name="issue_recognition_id">
+            {% for issue_recognition in issue_recognitions %}
+            <option value="{{ issue_recognition.IssueRecognitionID }}">{{ issue_recognition.IssueRecognitionName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="priority_id">Priority:</label>
+        <select id="priority_id" name="priority_id">
+            {% for priority in priorities %}
+            <option value="{{ priority.PriorityID }}">{{ priority.PriorityName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="assigned_to">Assigned To:</label>
+        <select id="assigned_to" name="assigned_to" onchange="updateDepartment()">
+            {% for person in people %}
+            <option value="{{ person.PersonID }}">{{ person.PersonName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="department_id">Department:</label>
+        <select id="department_id" name="department_id">
+            {% for department in departments %}
+            <option value="{{ department.DepartmentID }}">{{ department.DepartmentName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="status_id">Status:</label>
+        <select id="status_id" name="status_id">
+            {% for status in statuses %}
+            <option value="{{ status.StatusID }}" {% if status.StatusName == 'Open' %}selected{% endif %}>{{ status.StatusName }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="completed_date">Completed Date:</label>
+        <input type="date" id="completed_date" name="completed_date">
+
+        <label for="remarks">Remarks:</label>
+        <textarea id="remarks" name="remarks"></textarea>
+
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>

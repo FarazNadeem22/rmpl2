@@ -3,103 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <title>Add Ticket</title>
+    <style>
+        form {
+            width: 600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .row {
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .row-odd {
+            background-color: #f9f7f7;
+        }
+        .row-even {
+            background-color: #e5f7f6;
+        }
+        label, input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        input[type="submit"] {
+            grid-column: span 2;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+        .department-label, .kva-label, .engine-location-label {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            height: 38px;
+        }
+    </style>
     <script>
+        function updateDepartment() {
+            const personToDepartment = {
+                {% for person in people %}
+                "{{ person.PersonID }}": "{{ person.DepartmentName }}",
+                {% endfor %}
+            };
+
+            const selectedPerson = document.getElementById("assigned_to").value;
+            const departmentLabel = document.getElementById("department_label");
+            const departmentName = personToDepartment[selectedPerson];
+            
+            // Update department label or show "Department not found" if null
+            departmentLabel.textContent = departmentName || "Department not found";
+        }
+
         function updateGeneratorDetails() {
-            const generators = {{ generators | tojson }};
-            const generatorId = document.getElementById('generator_id').value;
-            const selectedGenerator = generators.find(generator => generator.GeneratorID == generatorId);
-            document.getElementById('kva').innerText = selectedGenerator.KVA;
-            document.getElementById('engine_location').innerText = selectedGenerator.EngineLocation;
-            document.getElementById('particulars').innerText = selectedGenerator.Particulars;
+            const generatorToDetails = {
+                {% for generator in generators %}
+                "{{ generator.GeneratorID }}": {
+                    kva: "{{ generator.KVA }}",
+                    engineLocation: "{{ generator.EngineLocation }}"
+                },
+                {% endfor %}
+            };
+
+            const selectedGenerator = document.getElementById("generator_id").value;
+            const kvaLabel = document.getElementById("kva_label");
+            const engineLocationLabel = document.getElementById("engine_location_label");
+
+            kvaLabel.textContent = generatorToDetails[selectedGenerator]?.kva || "N/A";
+            engineLocationLabel.textContent = generatorToDetails[selectedGenerator]?.engineLocation || "N/A";
         }
     </script>
 </head>
 <body>
     <h1>Add Ticket</h1>
     <form action="/add_ticket" method="post">
-        <label for="start_date">Start Date:</label><br>
-        <input type="date" id="start_date" name="start_date"><br>
-        <label for="ticket_generation_time">Ticket Generation Time:</label><br>
-        <input type="time" id="ticket_generation_time" name="ticket_generation_time"><br>
-        <label for="ticket_resolution_time">Ticket Resolution Time:</label><br>
-        <input type="time" id="ticket_resolution_time" name="ticket_resolution_time"><br>
+        <div class="row row-odd">
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date">
 
-        <label for="generator_id">Generator (RMG No):</label><br>
-        <select id="generator_id" name="generator_id" onchange="updateGeneratorDetails()">
-            {% for generator in generators %}
+            <label for="ticket_generation_time">Ticket Generation Time:</label>
+            <input type="time" id="ticket_generation_time" name="ticket_generation_time">
+        </div>
+
+        <div class="row row-even">
+            <label for="ticket_resolution_time">Ticket Resolution Time:</label>
+            <input type="time" id="ticket_resolution_time" name="ticket_resolution_time">
+
+            <label for="generator_id">Generator (RMG):</label>
+            <select id="generator_id" name="generator_id" onchange="updateGeneratorDetails()">
+                {% for generator in generators %}
                 <option value="{{ generator.GeneratorID }}">{{ generator.RMGNo }}</option>
-            {% endfor %}
-        </select><br>
-        
-        <label>KVA:</label> <span id="kva"></span><br>
-        <label>Engine Location:</label> <span id="engine_location"></span><br>
-        <label>Particulars:</label> <span id="particulars"></span><br>
+                {% endfor %}
+            </select>
+        </div>
 
-        <label for="issue_id">Issue:</label><br>
-        <select id="issue_id" name="issue_id">
-            {% for issue in issues %}
+        <div class="row row-odd">
+            <label>KVA:</label>
+            <div id="kva_label" class="kva-label">Select a generator to see the KVA</div>
+
+            <label>Engine Location:</label>
+            <div id="engine_location_label" class="engine-location-label">Select a generator to see the engine location</div>
+        </div>
+
+        <div class="row row-even">
+            <label for="issue_id">Issue:</label>
+            <select id="issue_id" name="issue_id">
+                {% for issue in issues %}
                 <option value="{{ issue.IssueID }}">{{ issue.IssueName }}</option>
-            {% endfor %}
-        </select><br>
+                {% endfor %}
+            </select>
 
-        <label for="client_id">Client:</label><br>
-        <select id="client_id" name="client_id">
-            {% for client in clients %}
+            <label for="client_id">Client:</label>
+            <select id="client_id" name="client_id">
+                {% for client in clients %}
                 <option value="{{ client.ClientID }}">{{ client.ClientName }}</option>
-            {% endfor %}
-        </select><br>
+                {% endfor %}
+            </select>
+        </div>
 
-        <label for="ticket_type_id">Ticket Type:</label><br>
-        <select id="ticket_type_id" name="ticket_type_id">
-            {% for ticket_type in ticket_types %}
+        <div class="row row-odd">
+            <label for="ticket_type_id">Ticket Type:</label>
+            <select id="ticket_type_id" name="ticket_type_id">
+                {% for ticket_type in ticket_types %}
                 <option value="{{ ticket_type.TicketTypeID }}">{{ ticket_type.TicketTypeName }}</option>
-            {% endfor %}
-        </select><br>
+                {% endfor %}
+            </select>
 
-        <label for="issue_recognition_id">Issue Recognition:</label><br>
-        <select id="issue_recognition_id" name="issue_recognition_id">
-            {% for issue_recognition in issue_recognitions %}
+            <label for="issue_recognition_id">Issue Recognition:</label>
+            <select id="issue_recognition_id" name="issue_recognition_id">
+                {% for issue_recognition in issue_recognitions %}
                 <option value="{{ issue_recognition.IssueRecognitionID }}">{{ issue_recognition.IssueRecognitionName }}</option>
-            {% endfor %}
-        </select><br>
+                {% endfor %}
+            </select>
+        </div>
 
-        <label for="priority_id">Priority:</label><br>
-        <select id="priority_id" name="priority_id">
-            {% for priority in priorities %}
+        <div class="row row-even">
+            <label for="priority_id">Priority:</label>
+            <select id="priority_id" name="priority_id">
+                {% for priority in priorities %}
                 <option value="{{ priority.PriorityID }}">{{ priority.PriorityName }}</option>
-            {% endfor %}
-        </select><br>
+                {% endfor %}
+            </select>
 
-        <label for="assigned_to">Assigned To:</label><br>
-        <select id="assigned_to" name="assigned_to">
-            {% for person in people %}
+            <label for="assigned_to">Assigned To:</label>
+            <select id="assigned_to" name="assigned_to" onchange="updateDepartment()">
+                {% for person in people %}
                 <option value="{{ person.PersonID }}">{{ person.PersonName }}</option>
-            {% endfor %}
-        </select><br>
+                {% endfor %}
+            </select>
+        </div>
 
-        <label for="department_id">Department:</label><br>
-        <select id="department_id" name="department_id">
-            {% for department in departments %}
-                <option value="{{ department.DepartmentID }}">{{ department.DepartmentName }}</option>
-            {% endfor %}
-        </select><br>
+        <div class="row row-odd">
+            <label>Department:</label>
+            <div id="department_label" class="department-label">Select a person to see the department</div>
 
-        <label for="status_id">Status:</label><br>
-        <select id="status_id" name="status_id">
-            {% for status in statuses %}
-        <option value="{{ status.StatusID }}" {% if status.StatusName == 'Open' %}selected{% endif %}>{{ status.StatusName }}</option>
-            {% endfor %}
-        </select><br>
+            <label for="status_id">Status:</label>
+            <select id="status_id" name="status_id">
+                {% for status in statuses %}
+                <option value="{{ status.StatusID }}" {% if status.StatusName == 'Open' %}selected{% endif %}>{{ status.StatusName }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
+        <div class="row row-even">
+            <label for="completed_date">Completed Date:</label>
+            <input type="date" id="completed_date" name="completed_date">
 
-        <label for="completed_date">Completed Date:</label><br>
-        <input type="date" id="completed_date" name="completed_date"><br>
+            <label for="remarks">Remarks:</label>
+            <textarea id="remarks" name="remarks"></textarea>
+        </div>
 
-        <label for="remarks">Remarks:</label><br>
-        <textarea id="remarks" name="remarks"></textarea><br>
-
-        <input type="submit" value="Add Ticket">
+        <input type="submit" value="Submit">
     </form>
-    <a href="/">Back to Report</a>
 </body>
 </html>

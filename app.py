@@ -31,54 +31,70 @@ def view_open_tickets():
     ticket_type = request.args.get('ticket_type')
     priority_filter = request.args.get('priority')
     assigned_to_filter = request.args.get('assigned_to')
-    
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        
-        cursor.callproc('generate_ticket_report')
-        
-        # Fetch the result of the stored procedure
-        tickets = []
-        for result in cursor.stored_results():
-            tickets.extend(result.fetchall())
 
-        # Filter open tickets
-        open_tickets = [ticket for ticket in tickets if ticket.get('StatusName') == 'Open']
-        
-        # Apply filters
+        # Updated SQL query with LEFT JOINs to ensure all data is fetched, even if some fields are NULL
+        cursor.execute("""
+            SELECT t.*, 
+                   g.RMGNo AS GeneratorName, 
+                   i.IssueName, 
+                   c.ClientName, 
+                   tt.TicketTypeName, 
+                   p.PriorityName, 
+                   pe.PersonName AS AssignedToName, 
+                   d.DepartmentName, 
+                   s.StatusName,
+                   ir.IssueRecognitionName
+            FROM Tickets t
+            LEFT JOIN Generators g ON t.GeneratorID = g.GeneratorID
+            LEFT JOIN Issues i ON t.IssueID = i.IssueID
+            LEFT JOIN Clients c ON t.ClientID = c.ClientID
+            LEFT JOIN TicketTypes tt ON t.TicketTypeID = tt.TicketTypeID
+            LEFT JOIN Priorities p ON t.PriorityID = p.PriorityID
+            LEFT JOIN People pe ON t.AssignedTo = pe.PersonID
+            LEFT JOIN Departments d ON pe.DepartmentID = d.DepartmentID
+            LEFT JOIN Statuses s ON t.StatusID = s.StatusID
+            LEFT JOIN IssueRecognitions ir ON t.IssueRecognitionID = ir.IssueRecognitionID
+            WHERE s.StatusName = 'Open'
+        """)
+
+        open_tickets = cursor.fetchall()
+
+        # Apply filters (same as before)
         if ticket_number:
             open_tickets = [ticket for ticket in open_tickets if str(ticket.get('TicketID')) == ticket_number]
-        
+
         if rmg_number:
-            open_tickets = [ticket for ticket in open_tickets if rmg_number.lower() == ticket.get('RMGNo', '').lower()]
-        
+            open_tickets = [ticket for ticket in open_tickets if rmg_number.lower() == ticket.get('GeneratorName', '').lower()]
+
         if issue_name:
             open_tickets = [ticket for ticket in open_tickets if issue_name.lower() in ticket.get('IssueName', '').lower()]
-        
+
         if client_name:
             open_tickets = [ticket for ticket in open_tickets if client_name.lower() in ticket.get('ClientName', '').lower()]
-        
+
         if ticket_type:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('TicketTypeName') == ticket_type]
-        
+
         if priority_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('PriorityName') == priority_filter]
 
         if assigned_to_filter:
             open_tickets = [ticket for ticket in open_tickets if ticket.get('AssignedToName') == assigned_to_filter]
 
-        # Fetch ticket numbers for open tickets only
+        # Fetch dropdown data for filters (same as before)
         cursor.execute("SELECT TicketID FROM Tickets WHERE StatusID = (SELECT StatusID FROM Statuses WHERE StatusName = 'Open')")
         ticket_numbers = cursor.fetchall()
-        
-        # Fetch RMG numbers, priorities, ticket types, people, and clients for the dropdowns
+
         cursor.execute("SELECT DISTINCT RMGNo FROM Generators")
         rmg_numbers = cursor.fetchall()
-        
+
         cursor.execute("SELECT PriorityName FROM Priorities")
         priorities = cursor.fetchall()
-        
+
         cursor.execute("SELECT TicketTypeName FROM TicketTypes")
         ticket_types = cursor.fetchall()
 
@@ -90,10 +106,11 @@ def view_open_tickets():
 
         cursor.close()
         conn.close()
-        
+
         return render_template('view_open_tickets.html', open_tickets=open_tickets, ticket_numbers=ticket_numbers, rmg_numbers=rmg_numbers, priorities=priorities, ticket_types=ticket_types, people=people, clients=clients)
     except Error as e:
         return f"Error: {e}"
+
 
 @app.route('/view_closed_tickets')
 def view_closed_tickets():
@@ -120,6 +137,7 @@ def view_closed_tickets():
 @app.route('/add_ticket', methods=['GET', 'POST'])
 def add_ticket():
     if request.method == 'POST':
+        # Extract form data
         start_date = request.form['start_date']
         ticket_generation_time = request.form['ticket_generation_time']
         ticket_resolution_time = request.form['ticket_resolution_time']
@@ -130,25 +148,23 @@ def add_ticket():
         issue_recognition_id = request.form['issue_recognition_id']
         priority_id = request.form['priority_id']
         assigned_to = request.form['assigned_to']
-        department_id = request.form['department_id']
         status_id = request.form['status_id']
         completed_date = request.form['completed_date'] if request.form['completed_date'] else None
         remarks = request.form['remarks']
 
         try:
+            # Insert the new ticket into the database
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
                 """
                 INSERT INTO Tickets (
-                    StartDate, TicketGenerationTime, TicketResolutionTime, GeneratorID, IssueID, ClientID, 
-                    TicketTypeID, IssueRecognitionID, PriorityID, AssignedTo, DepartmentID, StatusID, 
-                    CompletedDate, Remarks
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    StartDate, TicketGenerationTime, TicketResolutionTime, GeneratorID, IssueID, ClientID,
+                    TicketTypeID, IssueRecognitionID, PriorityID, AssignedTo, StatusID, CompletedDate, Remarks
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
-                (start_date, ticket_generation_time, ticket_resolution_time, generator_id, issue_id, client_id, 
-                ticket_type_id, issue_recognition_id, priority_id, assigned_to, department_id, status_id, 
-                completed_date, remarks)
+                (start_date, ticket_generation_time, ticket_resolution_time, generator_id, issue_id, client_id,
+                 ticket_type_id, issue_recognition_id, priority_id, assigned_to, status_id, completed_date, remarks)
             )
             conn.commit()
             cursor.close()
@@ -156,6 +172,55 @@ def add_ticket():
             return redirect(url_for('index'))
         except Error as e:
             return f"Error: {e}"
+
+    try:
+        # Fetch data for dropdowns, including department information
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT p.PersonID, p.PersonName, p.Details, d.DepartmentName 
+            FROM People p 
+            JOIN Departments d ON p.DepartmentID = d.DepartmentID
+        """)
+        people = cursor.fetchall()
+
+        cursor.execute("SELECT GeneratorID, RMGNo, KVA, EngineLocation FROM Generators")
+        generators = cursor.fetchall()
+
+        cursor.execute("SELECT IssueID, IssueName FROM Issues ORDER BY IssueName ASC")
+        issues = cursor.fetchall()
+
+        cursor.execute("SELECT ClientID, ClientName FROM Clients ORDER BY ClientName ASC")
+        clients = cursor.fetchall()
+
+        cursor.execute("SELECT TicketTypeID, TicketTypeName FROM TicketTypes ORDER BY TicketTypeName ASC")
+        ticket_types = cursor.fetchall()
+
+        cursor.execute("SELECT IssueRecognitionID, IssueRecognitionName FROM IssueRecognitions")
+        issue_recognitions = cursor.fetchall()
+
+        cursor.execute("SELECT PriorityID, PriorityName FROM Priorities")
+        priorities = cursor.fetchall()
+
+        cursor.execute("SELECT StatusID, StatusName FROM Statuses")
+        statuses = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return render_template('add_ticket.html',
+                               people=people,
+                               generators=generators,
+                               issues=issues,
+                               clients=clients,
+                               ticket_types=ticket_types,
+                               issue_recognitions=issue_recognitions,
+                               priorities=priorities,
+                               statuses=statuses)
+    except Error as e:
+        return f"Error: {e}"
+
 
     try:
         conn = get_db_connection()
@@ -369,7 +434,7 @@ def change_ticket_status(ticket_id):
         return redirect(url_for('view_void_tickets'))
     except Error as e:
         return f"Error: {e}"
-
+ 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
