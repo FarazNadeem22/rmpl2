@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
 from mysql.connector import Error
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -19,31 +20,6 @@ def get_db_connection():
 @app.route('/')
 def index():
     return render_template('index.html')
-    
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        cursor.callproc('generate_ticket_report')
-        
-        # Fetch the result of the stored procedure
-        tickets = []
-        for result in cursor.stored_results():
-            tickets.extend(result.fetchall())
-
-        # Apply the filtering in Python
-        if status_filter:
-            tickets = [ticket for ticket in tickets if ticket.get('StatusName') == status_filter]
-
-        # Fetch statuses for the dropdown
-        cursor.execute("SELECT StatusName FROM Statuses")
-        statuses = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-        return render_template('index.html', tickets=tickets, statuses=statuses)
-    except Error as e:
-        return f"Error: {e}"
 
 @app.route('/view_open_tickets', methods=['GET'])
 def view_open_tickets():
@@ -119,9 +95,6 @@ def view_open_tickets():
     except Error as e:
         return f"Error: {e}"
 
-
-
-
 @app.route('/view_closed_tickets')
 def view_closed_tickets():
     try:
@@ -191,7 +164,7 @@ def add_ticket():
         cursor.execute("SELECT GeneratorID, RMGNo, KVA, EngineLocation, Particulars FROM Generators")
         generators = cursor.fetchall()
         
-        cursor.execute("SELECT IssueID, IssueName FROM Issues ORDER BY IssueName  ASC")
+        cursor.execute("SELECT IssueID, IssueName FROM Issues ORDER BY IssueName ASC")
         issues = cursor.fetchall()
         
         cursor.execute("SELECT ClientID, ClientName FROM Clients ORDER BY ClientName ASC")
@@ -296,6 +269,51 @@ def void_ticket(ticket_id):
         cursor.close()
         conn.close()
         return redirect(url_for('index'))
+    except Error as e:
+        return f"Error: {e}"
+
+@app.route('/view_summary/<int:ticket_id>', methods=['GET', 'POST'])
+def view_summary(ticket_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Fetch ticket details
+        cursor.execute("SELECT * FROM Tickets WHERE TicketID = %s", (ticket_id,))
+        ticket = cursor.fetchone()
+
+        # Fetch all summaries for this ticket
+        cursor.execute("SELECT * FROM Summary WHERE TicketID = %s ORDER BY UpdateDate ASC", (ticket_id,))
+        summaries = cursor.fetchall()
+
+        current_time = datetime.now().strftime('%Y-%m-%dT%H:%M')  # Format for datetime-local input
+
+        cursor.close()
+        conn.close()
+
+        return render_template('view_summary.html', ticket=ticket, summaries=summaries, current_time=current_time)
+    except Error as e:
+        return f"Error: {e}"
+
+@app.route('/add_summary_update/<int:ticket_id>', methods=['POST'])
+def add_summary_update(ticket_id):
+    update_date = request.form['update_date']
+    update_text = request.form['update_text']
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO Summary (TicketID, UpdateDate, UpdateText)
+            VALUES (%s, %s, %s)
+            """,
+            (ticket_id, update_date, update_text)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect(url_for('view_summary', ticket_id=ticket_id))
     except Error as e:
         return f"Error: {e}"
 

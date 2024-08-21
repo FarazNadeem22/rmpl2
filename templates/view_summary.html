@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Details and Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        p {
+            margin: 5px 0;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f9f9f9;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        form input, form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        form button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #218838;
+        }
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ticket Details</h1>
+    <p><strong>Ticket ID:</strong> {{ ticket.TicketID }}</p>
+    <p><strong>Start Date:</strong> {{ ticket.StartDate }}</p>
+    <p><strong>Generator Name:</strong> {{ ticket.GeneratorName }}</p>
+    <p><strong>Issue Name:</strong> {{ ticket.IssueName }}</p>
+    <p><strong>Client Name:</strong> {{ ticket.ClientName }}</p>
+    <p><strong>Ticket Type:</strong> {{ ticket.TicketTypeName }}</p>
+    <p><strong>Status:</strong> {{ ticket.StatusName }}</p>
+    <!-- Add more ticket details as needed -->
+
+    <h2>Summary</h2>
+    <ul>
+        {% for summary in summaries %}
+        <li>
+            <strong>{{ summary.UpdateDate }}:</strong> {{ summary.UpdateText }}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Conditionally show the form if the ticket is not closed -->
+    {% if ticket.StatusName != 'Closed' %}
+    <h2>Add New Update</h2>
+    <form method="POST" action="{{ url_for('add_summary_update', ticket_id=ticket.TicketID) }}">
+        <label for="update_date">Date and Time:</label>
+        <input type="datetime-local" id="update_date" name="update_date" value="{{ current_time }}" readonly>
+
+        <label for="update_text">Update:</label>
+        <textarea id="update_text" name="update_text" rows="4"></textarea>
+
+        <button type="submit">Done</button>
+    </form>
+    {% else %}
+    <p><strong>This ticket is closed. No further updates can be made.</strong></p>
+    {% endif %}
+
+    <!-- Back Buttons -->
+    <a href="{{ url_for('view_open_tickets') }}" class="back-button">Back to View Open Tickets</a>
+    <a href="{{ url_for('view_closed_tickets') }}" class="back-button">Back to View Closed Tickets</a>
+    <a href="{{ url_for('index') }}" class="back-button">Back to Home</a>
+</body>
+</html>
