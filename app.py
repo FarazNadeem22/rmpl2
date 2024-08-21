@@ -343,15 +343,19 @@ def view_summary(ticket_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Fetch ticket details with necessary joins to populate the fields
+        # Fetch ticket details with priority, assigned to, and remarks
         cursor.execute("""
-            SELECT t.TicketID, t.StartDate, g.RMGNo AS GeneratorName, i.IssueName, c.ClientName, tt.TicketTypeName, s.StatusName
+            SELECT t.TicketID, t.StartDate, g.RMGNo AS GeneratorName, i.IssueName, c.ClientName, 
+                   tt.TicketTypeName, s.StatusName, p.PriorityName, pe.PersonName AS AssignedToName, 
+                   t.Remarks
             FROM Tickets t
             LEFT JOIN Generators g ON t.GeneratorID = g.GeneratorID
             LEFT JOIN Issues i ON t.IssueID = i.IssueID
             LEFT JOIN Clients c ON t.ClientID = c.ClientID
             LEFT JOIN TicketTypes tt ON t.TicketTypeID = tt.TicketTypeID
             LEFT JOIN Statuses s ON t.StatusID = s.StatusID
+            LEFT JOIN Priorities p ON t.PriorityID = p.PriorityID
+            LEFT JOIN People pe ON t.AssignedTo = pe.PersonID
             WHERE t.TicketID = %s
         """, (ticket_id,))
         ticket = cursor.fetchone()
