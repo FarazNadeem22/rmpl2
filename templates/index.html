@@ -41,12 +41,13 @@
     </style>
 </head>
 <body>
-    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
+    <img src="/static/logo.jpg" alt="Logo">
     <div class="button-group">
         <button onclick="location.href='/edit_ticket'">Edit Ticket</button>
         <button onclick="location.href='/view_closed_tickets'">View Closed Tickets</button>
         <button onclick="location.href='/view_open_tickets'">View Open Tickets</button>
         <button onclick="location.href='/view_void_tickets'">View Void Tickets</button>
+        <button onclick="location.href='/run_analysis'">Run Analysis</button> <!-- New button -->
     </div>
 </body>
 </html>

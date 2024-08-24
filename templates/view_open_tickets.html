@@ -45,11 +45,16 @@
 </head>
 <body>
     <h1>Open Tickets</h1>
+    
     <div class="button-group">
         <button onclick="location.href='/'">Home</button>
         <button onclick="location.href='/add_ticket'">Add New Ticket</button>
         <button onclick="location.href='/view_closed_tickets'">View Closed Tickets</button>
     </div>
+
+    <!-- Debugging: Display total number of open tickets -->
+    <p>Total Tickets: {{ open_tickets|length }}</p>
+
     <form method="GET" action="/view_open_tickets">
         <div class="form-group">
             <label for="ticket_number">Filter by Ticket Number:</label>
@@ -116,6 +121,7 @@
         </div>
         <button type="submit" style="grid-column: span 3;">Apply Filters</button>
     </form>
+
     <table>
         <tr>
             <th>Action</th>
@@ -137,32 +143,38 @@
             <th>Pending Days</th>
             <th>Remarks</th>
         </tr>
-        {% for ticket in open_tickets %}
+        {% if open_tickets %}
+            {% for ticket in open_tickets %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('edit_ticket', ticket_id=ticket.TicketID) }}">Edit</a> |
+                    <a href="{{ url_for('void_ticket', ticket_id=ticket.TicketID) }}">Void</a> |
+                    <a href="{{ url_for('view_summary', ticket_id=ticket.TicketID) }}">Summary</a>
+                </td>
+                <td>{{ ticket.TicketID }}</td>
+                <td>{{ ticket.StartDate }}</td>
+                <td>{{ ticket.TicketGenerationTime }}</td>
+                <td>{{ ticket.TicketResolutionTime }}</td>
+                <td>{{ ticket.GeneratorName }}</td>
+                <td>{{ ticket.IssueName }}</td>
+                <td>{{ ticket.ClientName }}</td>
+                <td>{{ ticket.TicketTypeName }}</td>
+                <td>{{ ticket.IssueRecognitionName }}</td>
+                <td>{{ ticket.PriorityName }}</td>
+                <td>{{ ticket.AssignedToName }}</td>
+                <td>{{ ticket.DepartmentName }}</td>
+                <td>{{ ticket.StatusName }}</td>
+                <td>{{ ticket.CompletedDate or 'N/A' }}</td>
+                <td>{{ ticket.TimeTakenDays or 'N/A' }}</td>
+                <td>{{ ticket.PendingDays or 'N/A' }}</td>
+                <td>{{ ticket.Remarks or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
         <tr>
-            <td>
-                <a href="{{ url_for('edit_ticket', ticket_id=ticket.TicketID) }}">Edit</a> |
-                <a href="{{ url_for('void_ticket', ticket_id=ticket.TicketID) }}">Void</a> |
-                <a href="{{ url_for('view_summary', ticket_id=ticket.TicketID) }}">Summary</a>
-            </td>
-            <td>{{ ticket.TicketID }}</td>
-            <td>{{ ticket.StartDate }}</td>
-            <td>{{ ticket.TicketGenerationTime }}</td>
-            <td>{{ ticket.TicketResolutionTime }}</td>
-            <td>{{ ticket.GeneratorName }}</td>
-            <td>{{ ticket.IssueName }}</td>
-            <td>{{ ticket.ClientName }}</td>
-            <td>{{ ticket.TicketTypeName }}</td>
-            <td>{{ ticket.IssueRecognitionName }}</td>
-            <td>{{ ticket.PriorityName }}</td>
-            <td>{{ ticket.AssignedToName }}</td>
-            <td>{{ ticket.DepartmentName }}</td>
-            <td>{{ ticket.StatusName }}</td>
-            <td>{{ ticket.CompletedDate }}</td>
-            <td>{{ ticket.TimeTakenDays }}</td>
-            <td>{{ ticket.PendingDays }}</td>
-            <td>{{ ticket.Remarks }}</td>
+            <td colspan="18">No open tickets found.</td>
         </tr>
-        {% endfor %}
+        {% endif %}
     </table>
 </body>
 </html>
